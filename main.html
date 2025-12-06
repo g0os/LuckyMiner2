@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Удачливый Шахтер | Кликер</title>
+    <style>
+        /* CSS V2.0 - Более темный и современный дизайн */
+        body { 
+            font-family: 'Roboto', sans-serif; 
+            background-color: #0d1117; 
+            color: #c9d1d9; 
+            margin: 0; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+        .container { 
+            max-width: 960px; 
+            width: 100%; 
+            background-color: #161b22; 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); 
+        }
+        h1 { color: #58a6ff; text-align: center; margin-bottom: 25px; font-weight: 700; }
+        
+        /* Хедер и Навигация */
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 25px; 
+            padding-bottom: 15px; 
+            border-bottom: 2px solid #30363d; 
+        }
+        .status-panel { 
+            font-size: 1.1em; 
+            font-weight: 500; 
+            color: #c9d1d9;
+        }
+        .status-panel span { font-weight: 700; color: #f0f6fc; margin-right: 15px; }
+
+        /* Навигационные кнопки (Меню) */
+        .nav-buttons { text-align: center; margin-bottom: 20px; }
+        .nav-button { 
+            background-color: #238636; 
+            color: white; 
+            border: none; 
+            padding: 12px 20px; 
+            font-size: 16px; 
+            margin: 5px; 
+            cursor: pointer; 
+            border-radius: 6px; 
+            transition: background-color 0.3s, transform 0.1s; 
+            font-weight: 600;
+        }
+        .nav-button:hover { background-color: #2ea043; }
+        .nav-button.logout { background-color: #da3633; }
+        .nav-button.logout:hover { background-color: #f85149; }
+        
+        .content-section { 
+            margin-top: 20px; 
+            padding: 20px; 
+            border: 1px solid #30363d; 
+            border-radius: 8px; 
+            background-color: #0d1117; 
+            display: none; 
+        }
+        .content-section.active { display: block; }
+
+        /* Кликер */
+        #click-button { 
+            background-color: #58a6ff; 
+            color: white; 
+            border: none; 
+            padding: 35px 70px; 
+            font-size: 28px; 
+            cursor: pointer; 
+            border-radius: 12px; 
+            transition: transform 0.1s, background-color 0.3s; 
+            margin: 25px auto; 
+            display: block; 
+            box-shadow: 0 0 15px #58a6ff4d;
+        }
+        #click-button:active { transform: scale(0.95); }
+        .click-area { text-align: center; }
+        #click-display { font-size: 40px; font-weight: bold; color: #58a6ff; margin-bottom: 10px; }
+        
+        /* Инвентарь и Магазин */
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
+            gap: 15px; 
+        }
+        .item-card, .shop-item { 
+            background-color: #21262d; 
+            padding: 15px; 
+            border-radius: 8px; 
+            text-align: center; 
+            border: 1px solid #30363d;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .item-card button, .shop-item button { 
+            background-color: #388e3c; 
+            color: white; 
+            border: none; 
+            padding: 8px 15px; 
+            margin-top: 10px; 
+            cursor: pointer; 
+            border-radius: 4px; 
+            transition: background-color 0.3s;
+        }
+        .item-card button:hover, .shop-item button:hover:not(:disabled) { background-color: #4caf50; }
+        .shop-item button:disabled { background-color: #777; cursor: not-allowed; }
+        .sell-all-button { background-color: #da3633 !important; margin-top: 20px; }
+        .sell-all-button:hover { background-color: #f85149 !important; }
+
+        /* Сообщение о выпадении */
+        #drop-message { 
+            position: fixed; top: 50%; left: 50%; 
+            transform: translate(-50%, -50%); 
+            padding: 20px 30px; 
+            background-color: #238636; 
+            color: white; 
+            border-radius: 12px; 
+            font-size: 26px; 
+            font-weight: bold; 
+            z-index: 1000; 
+            box-shadow: 0 0 25px rgba(35, 134, 54, 0.7); 
+            opacity: 0; 
+            transition: opacity 0.5s; 
+        }
+        #drop-message.show { opacity: 1; animation: drop-fade-out 2s forwards; }
+
+        @keyframes drop-fade-out {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+        }
+
+        /* Авторизация */
+        #auth-screen { text-align: center; padding: 50px; background-color: #161b22; }
+        #auth-screen input { 
+            padding: 12px; 
+            margin: 10px 0; 
+            width: 80%; max-width: 350px; 
+            border-radius: 6px; 
+            border: 1px solid #30363d; 
+            background-color: #0d1117; 
+            color: white; 
+            display: block; 
+            margin-left: auto; 
+            margin-right: auto;
+        }
+        #auth-screen button { 
+            padding: 10px 25px; 
+            margin: 8px; 
+            background-color: #58a6ff; 
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: 600;
+        }
+        #auth-screen button:hover { background-color: #4196e8; }
+        
+        /* Таблица лидеров */
+        .leaderboard-tabs { text-align: center; margin-bottom: 15px; }
+        .leaderboard-tabs button { 
+            background-color: #30363d; 
+            color: #c9d1d9; 
+            border: none; 
+            padding: 10px 15px; 
+            margin: 0 5px; 
+            cursor: pointer; 
+            border-radius: 6px 6px 0 0; 
+            transition: background-color 0.3s;
+        }
+        .leaderboard-tabs button.active-tab { background-color: #58a6ff; color: white; }
+        .leaderboard-table { width: 100%; border-collapse: collapse; }
+        .leaderboard-table th, .leaderboard-table td { 
+            padding: 12px; 
+            border-bottom: 1px solid #30363d; 
+            text-align: left;
+        }
+        .leaderboard-table th { background-color: #21262d; color: #58a6ff; }
+        .leaderboard-table tr:hover { background-color: #161b22; }
+        .leaderboard-table td:nth-child(2) { font-weight: bold; }
+        .leaderboard-table tr:first-child td { background-color: #ffc10740; } /* Золото для 1 места */
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div id="auth-screen" class="content-section active">
+        <h1>⛏️ Удачливый Шахтер</h1>
+        <input type="text" id="username-input" placeholder="Имя пользователя">
+        <input type="password" id="password-input" placeholder="Пароль">
+        <div id="auth-error" style="color: #f85149; margin-top: 10px;"></div>
+        <button onclick="register()">Регистрация</button>
+        <button onclick="login()">Вход</button>
+    </div>
+
+    <div id="game-screen" class="content-section">
+        <div id="admin-section" class="content-section">
+    <h3>Панель Администратора</h3>
+    <div id="admin-user-list">
+        </div>
+        </div>
+        <div class="header">
+            <h3 id="current-user"></h3>
+            <div class="status-panel">
+                Баланс: <span id="cl-count" style="color: #f9d71c;">0 CL</span> 
+                Множитель: <span id="multiplier" style="color: #58a6ff;">x1</span>
+            </div>
+        </div>
+
+        <div class="nav-buttons">
+            <button class="nav-button" id="admin-nav-button" onclick="showSection('admin-section')" style="display:none;">👑 Админка</button>
+            <button class="nav-button" onclick="showSection('clicker-section')">⛏️ Клик</button>
+            <button class="nav-button" onclick="showSection('inventory-section')">📦 Инвентарь</button>
+            <button class="nav-button" onclick="showSection('shop-section')">🛒 Магазин</button>
+            <button class="nav-button" onclick="showSection('leaderboard-section')">🏆 Лидеры</button>
+            <button class="nav-button logout" onclick="logout()">🚪 Выход</button>
+        </div>
+        
+        <div id="clicker-section" class="content-section active">
+            <h3>Центр добычи</h3>
+            <div class=click-area">
+                <div id="click-display">0 CL за клик</div>
+                <button id="click-button" onclick="clickAction()">НАЖАТЬ (⛏️)</button>
+            </div>
+            <div id="boost-timer" style="margin-top: 15px; font-weight: bold; color: #f9d71c; text-align: center;"></div>
+            <div id="drop-cooldown" style="margin-top: 10px; color: #f85149; text-align: center;"></div>
+        </div>
+
+        <div id="inventory-section" class="content-section">
+            <h3>Ваш Инвентарь</h3>
+            <div id="inventory-list" class="grid">
+                </div>
+            <div style="text-align: center;">
+                <button class="nav-button sell-all-button" onclick="sellAllItems()">Продать ВСЕ предметы</button>
+            </div>
+        </div>
+
+        <div id="shop-section" class="content-section">
+            <h3>Магазин Бустов</h3>
+            <div id="shop-list" class="grid">
+                </div>
+        </div>
+        
+        <div id="leaderboard-section" class="content-section">
+            <h3>Таблица Лидеров</h3>
+            <div class="leaderboard-tabs">
+                <button class="active-tab" onclick="renderLeaderboard('cl')">💰 CL</button>
+                <button onclick="renderLeaderboard('items')">📦 Предметы</button>
+            </div>
+            <div id="leaderboard-content">
+                </div>
+        </div>
+    </div>
+
+    <div id="drop-message"></div>
+
+</div>
+
+<script>
+// ГЛОБАЛЬНЫЕ ДАННЫЕ И ЛОГИКА ИГРЫ
+
+// --- 1. Данные Игры ---
+
+const DROPS = {
+    1: { name: "Уголь", chance: 50, value: 5, color: '#aaa' },
+    2: { name: "Камень", chance: 20, value: 60, color: '#999' },
+    3: { name: "Серебро", chance: 10, value: 500, color: '#ccc' },
+    4: { name: "Золото", chance: 5, value: 2800, color: '#f9d71c' },
+    5: { name: "Алмаз", chance: 1, value: 10000, color: '#00bcd4' },
+    6: { name: "Титан", chance: 0.25, value: 1000000, color: '#444' }
+};
+// Суммарный шанс 86.25. Для полной редкости используем 100% шанс выпадения, но это будет 1 раз в 30 секунд.
+
+const DROP_COOLDOWN_MS = 30000; // 30 секунд
+
+const SHOP_ITEMS = [
+    { id: 'x2_1m', name: 'x2 Клик (1 мин)', cost: 50, duration: 60, multiplier: 2 },
+    { id: 'x3_1m', name: 'x3 Клик (1 мин)', cost: 100, duration: 60, multiplier: 3 },
+    { id: 'x2_5m', name: 'x2 Клик (5 мин)', cost: 200, duration: 300, multiplier: 2 },
+    { id: 'x3_5m', name: 'x3 Клик (5 мин)', cost: 400, duration: 300, multiplier: 3 },
+];
+
+let currentUser = null; 
+let baseClickValue = 1; 
+let boostInterval = null; 
+
+// --- 2. Утилиты (Сохранение/Загрузка) ---
+
+function getAccounts() {
+    const accountsJson = localStorage.getItem('minerClickerAccounts');
+    return accountsJson ? JSON.parse(accountsJson) : {};
+}
+
+function saveAccounts(accounts) {
+    localStorage.setItem('minerClickerAccounts', JSON.stringify(accounts));
+}
+
+function saveCurrentUserData() {
+    if (!currentUser) return;
+    const accounts = getAccounts();
+    accounts[currentUser.username] = currentUser;
+    saveAccounts(accounts);
+}
+
+// --- 3. Авторизация/Регистрация (С ПАРОЛЕМ) ---
+
+function getInputValues() {
+    const username = document.getElementById('username-input').value.trim();
+    const password = document.getElementById('password-input').value;
+    const errorEl = document.getElementById('auth-error');
+    errorEl.textContent = '';
+    return { username, password, errorEl };
+}
+
+function register() {
+    const { username, password, errorEl } = getInputValues();
+
+    if (username.length < 3) {
+        errorEl.textContent = 'Имя пользователя должно быть не менее 3 символов.';
+        return;
+    }
+    if (password.length < 4) {
+        errorEl.textContent = 'Пароль должен быть не менее 4 символов.';
+        return;
+    }
+
+    const accounts = getAccounts();
+    if (accounts[username]) {
+        errorEl.textContent = 'Пользователь с таким именем уже существует.';
+        return;
+    }
+
+    // Создание нового аккаунта
+    currentUser = {
+        username: username,
+        password: password, // Хранение пароля (только для симуляции!)
+        cl: 0,
+        inventory: {}, 
+        boostEndTime: 0,
+        clickMultiplier: 1,
+        lastDropTime: 0, // Время последнего выпадения
+    };
+
+    saveCurrentUserData();
+    localStorage.setItem('lastLoggedInUser', username);
+    setupGameScreen();
+}
+
+function login() {
+    const { username, password, errorEl } = getInputValues();
+
+    if (username.length === 0 || password.length === 0) {
+        errorEl.textContent = 'Введите имя пользователя и пароль.';
+        return;
+    }
+
+    const accounts = getAccounts();
+    const user = accounts[username];
+    
+    if (!user) {
+        errorEl.textContent = 'Пользователь не найден.';
+        return;
+    }
+    if (user.password !== password) {
+        errorEl.textContent = 'Неверный пароль.';
+        return;
+    }
+
+    currentUser = user;
+    localStorage.setItem('lastLoggedInUser', username);
+    setupGameScreen();
+}
+
+function logout() {
+    saveCurrentUserData();
+    currentUser = null;
+    localStorage.removeItem('lastLoggedInUser');
+    document.getElementById('game-screen').classList.remove('active');
+    document.getElementById('auth-screen').classList.add('active');
+    document.getElementById('username-input').value = '';
+    document.getElementById('password-input').value = '';
+    clearInterval(boostInterval);
+    clearInterval(cooldownInterval);
+}
+
+function setupGameScreen() {
+    if (!currentUser) return;
+
+    document.getElementById('auth-screen').classList.remove('active');
+    document.getElementById('game-screen').classList.add('active');
+    
+    document.getElementById('current-user').textContent = `Привет, ${currentUser.username}!`;
+    
+    // Инициализация
+    updateUI();
+    renderInventory();
+    renderShop();
+    startBoostTimer();
+    startCooldownTimer();
+
+    showSection('clicker-section');
+}
+
+// --- 4. Основная Логика Игры ---
+
+function updateUI() {
+    if (!currentUser) return;
+
+    document.getElementById('cl-count').textContent = `${currentUser.cl} CL`;
+    document.getElementById('multiplier').textContent = `x${currentUser.clickMultiplier}`;
+    document.getElementById('click-display').textContent = `${baseClickValue * currentUser.clickMultiplier} CL за клик`;
+
+    // Обновление состояния кнопок магазина
+    const shopButtons = document.querySelectorAll('#shop-list button');
+    shopButtons.forEach(button => {
+        const cost = parseInt(button.dataset.cost);
+        button.disabled = currentUser.cl < cost;
+    });
+}
+
+let cooldownInterval = null;
+function startCooldownTimer() {
+    if (cooldownInterval) clearInterval(cooldownInterval);
+    const cooldownEl = document.getElementById('drop-cooldown');
+    const clickButton = document.getElementById('click-button');
+    
+    const checkCooldown = () => {
+        const now = Date.now();
+        const nextDropTime = currentUser.lastDropTime + DROP_COOLDOWN_MS;
+        
+        if (nextDropTime > now) {
+            const remainingSeconds = Math.round((nextDropTime - now) / 1000);
+            cooldownEl.textContent = `⏳ До следующего выпадения: ${remainingSeconds} с`;
+            // Устанавливаем клик в x1, но только если буст не активен, и блокируем кнопку
+            // clickButton.disabled = true; 
+        } else {
+            cooldownEl.textContent = '✅ Шанс выпадения активен!';
+            // clickButton.disabled = false;
+        }
+    };
+
+    checkCooldown();
+    cooldownInterval = setInterval(checkCooldown, 1000);
+}
+
+function clickAction() {
+    if (!currentUser) return;
+
+    // 1. Добавление CL
+    currentUser.cl += baseClickValue * currentUser.clickMultiplier;
+
+    // 2. Логика выпадения предмета (РЕДКИЙ)
+    const now = Date.now();
+    const nextDropTime = currentUser.lastDropTime + DROP_COOLDOWN_MS;
+
+    if (now >= nextDropTime) {
+        // Шанс выпадения активен
+        const totalChance = 100;
+        const randomValue = Math.random() * totalChance; 
+
+        let cumulativeChance = 0;
+        let droppedItem = null;
+
+        for (const id in DROPS) {
+            const item = DROPS[id];
+            cumulativeChance += item.chance;
+            
+            if (randomValue < cumulativeChance) {
+                droppedItem = item;
+                
+                // Добавить предмет в инвентарь
+                const itemId = item.name; 
+                currentUser.inventory[itemId] = (currentUser.inventory[itemId] || 0) + 1;
+
+                // Показать сообщение о выпадении
+                showDropMessage(item.name, item.color);
+                
+                // Сбросить кулдаун
+                currentUser.lastDropTime = now;
+                startCooldownTimer(); // Обновить таймер
+                break;
+            }
+        }
+    }
+
+    // 3. Обновление и сохранение
+    saveCurrentUserData();
+    updateUI();
+    renderInventory();
+}
+
+function showDropMessage(itemName, color) {
+    const messageEl = document.getElementById('drop-message');
+    messageEl.textContent = `💎 Выпал ${itemName}!`;
+    messageEl.style.backgroundColor = color;
+    messageEl.style.opacity = 0; 
+    
+    setTimeout(() => {
+        messageEl.classList.add('show');
+    }, 10);
+    
+    setTimeout(() => {
+        messageEl.classList.remove('show');
+    }, 2000);
+}
+
+// Функции startBoostTimer, buyBoost (не изменены)
+
+function startBoostTimer() {
+    if (boostInterval) {
+        clearInterval(boostInterval);
+    }
+
+    const boostTimerEl = document.getElementById('boost-timer');
+    
+    const checkBoost = () => {
+        const now = Date.now();
+        
+        if (currentUser.boostEndTime > now) {
+            const remainingSeconds = Math.round((currentUser.boostEndTime - now) / 1000);
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+            
+            if (currentUser.clickMultiplier !== currentUser.clickMultiplier) {
+                currentUser.clickMultiplier = currentUser.clickMultiplier;
+                updateUI();
+            }
+
+            boostTimerEl.textContent = `⚡️ БУСТ: x${currentUser.clickMultiplier}. Осталось: ${minutes}м ${seconds}с`;
+            
+        } else {
+            if (currentUser.clickMultiplier > 1) {
+                currentUser.clickMultiplier = 1;
+                saveCurrentUserData(); 
+            }
+            boostTimerEl.textContent = 'Нет активных бустов.';
+            updateUI(); 
+            clearInterval(boostInterval); 
+            boostInterval = null;
+        }
+    };
+    
+    checkBoost();
+    if (currentUser.boostEndTime > Date.now()) {
+        boostInterval = setInterval(checkBoost, 1000);
+    }
+}
+
+function buyBoost(itemId) {
+    if (!currentUser) return;
+    const item = SHOP_ITEMS.find(i => i.id === itemId);
+    if (!item) return;
+
+    if (currentUser.cl < item.cost) {
+        alert('Недостаточно CL для покупки этого буста!');
+        return;
+    }
+
+    currentUser.cl -= item.cost;
+    const now = Date.now();
+    let currentEndTime = currentUser.boostEndTime > now ? currentUser.boostEndTime : now;
+    
+    currentUser.boostEndTime = currentEndTime + (item.duration * 1000); 
+    currentUser.clickMultiplier = item.multiplier; 
+    
+    startBoostTimer();
+    
+    saveCurrentUserData();
+    updateUI();
+
+    alert(`Буст "${item.name}" активирован!`);
+}
+
+
+// --- 5. Инвентарь (Продажа и Продать ВСЕ) ---
+
+function renderInventory() {
+    if (!currentUser) return;
+
+    const inventoryList = document.getElementById('inventory-list');
+    inventoryList.innerHTML = ''; 
+
+    let totalItems = 0;
+    for (const itemName in currentUser.inventory) {
+        const count = currentUser.inventory[itemName];
+        totalItems += count;
+        if (count > 0) {
+            const itemData = Object.values(DROPS).find(d => d.name === itemName);
+            if (!itemData) continue;
+
+            const card = document.createElement('div');
+            card.className = 'item-card';
+            card.innerHTML = `
+                <h4 style="color: ${itemData.color};">${itemName}</h4>
+                <p>Количество: **${count}**</p>
+                <p>Продажа: **${itemData.value} CL** (за 1)</p>
+                <button onclick="sellItem('${itemName}')">Продать 1</button>
+            `;
+            inventoryList.appendChild(card);
+        }
+    }
+
+    if (totalItems === 0) {
+        inventoryList.innerHTML = '<p style="text-align: center; grid-column: 1 / -1;">Инвентарь пуст. Начните добычу!</p>';
+    }
+}
+
+function sellItem(itemName) {
+    if (!currentUser || currentUser.inventory[itemName] <= 0) return;
+
+    const itemData = Object.values(DROPS).find(d => d.name === itemName);
+    if (!itemData) return;
+
+    currentUser.inventory[itemName] -= 1;
+    currentUser.cl += itemData.value;
+
+    saveCurrentUserData();
+    updateUI();
+    renderInventory();
+}
+
+function sellAllItems() {
+    if (!currentUser) return;
+
+    let totalProfit = 0;
+    let totalSold = 0;
+    
+    for (const itemName in currentUser.inventory) {
+        const count = currentUser.inventory[itemName];
+        if (count > 0) {
+            const itemData = Object.values(DROPS).find(d => d.name === itemName);
+            if (!itemData) continue;
+            
+            totalProfit += count * itemData.value;
+            totalSold += count;
+            currentUser.inventory[itemName] = 0; // Сброс количества
+        }
+    }
+
+    if (totalSold > 0) {
+        currentUser.cl += totalProfit;
+        alert(`Продано ${totalSold} предметов. Получено ${totalProfit} CL!`);
+    } else {
+        alert('Инвентарь пуст.');
+    }
+
+    saveCurrentUserData();
+    updateUI();
+    renderInventory();
+}
+
+// --- 6. Магазин ---
+function renderShop() {
+    const shopGrid = document.getElementById('shop-list');
+    shopGrid.innerHTML = ''; 
+
+    SHOP_ITEMS.forEach(item => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'shop-item';
+        itemEl.innerHTML = `
+            <h4>${item.name}</h4>
+            <p>Множитель: **x${item.multiplier}**</p>
+            <p>Длительность: **${item.duration / 60} мин**</p>
+            <p>Цена: **${item.cost} CL**</p>
+            <button data-cost="${item.cost}" onclick="buyBoost('${item.id}')">Купить</button>
+        `;
+        shopGrid.appendChild(itemEl);
+    });
+}
+
+// --- 7. Таблица Лидеров ---
+
+function renderLeaderboard(sortBy) {
+    const accounts = Object.values(getAccounts());
+    
+    // 1. Сортировка данных
+    let sortedAccounts = [];
+    
+    if (sortBy === 'cl') {
+        sortedAccounts = accounts.sort((a, b) => b.cl - a.cl);
+    } else if (sortBy === 'items') {
+        sortedAccounts = accounts.map(user => ({
+            username: user.username,
+            totalItems: Object.values(user.inventory || {}).reduce((sum, count) => sum + count, 0)
+        })).sort((a, b) => b.totalItems - a.totalItems);
+    }
+    
+    // 2. Создание таблицы
+    let tableHTML = `
+        <table class="leaderboard-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Игрок</th>
+                    <th>${sortBy === 'cl' ? 'Баланс (CL)' : 'Всего Предметов'}</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    sortedAccounts.forEach((user, index) => {
+        let value;
+        if (sortBy === 'cl') {
+            value = user.cl;
+        } else {
+            value = user.totalItems;
+        }
+
+        tableHTML += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${user.username}</td>
+                <td>${value.toLocaleString()}</td>
+            </tr>
+        `;
+    });
+
+    tableHTML += `
+            </tbody>
+        </table>
+    `;
+
+    document.getElementById('leaderboard-content').innerHTML = tableHTML;
+    
+    // 3. Обновление активной кнопки
+    document.querySelectorAll('.leaderboard-tabs button').forEach(btn => {
+        btn.classList.remove('active-tab');
+    });
+    document.querySelector(`.leaderboard-tabs button[onclick="renderLeaderboard('${sortBy}')"]`).classList.add('active-tab');
+}
+
+
+// --- 8. Навигация и Инициализация ---
+
+function showSection(sectionId) {
+    document.querySelectorAll('.content-section').forEach(section => {
+        if (section.id !== 'auth-screen' && section.id !== 'game-screen') {
+            section.classList.remove('active');
+        }
+    });
+    document.getElementById(sectionId).classList.add('active');
+
+    if (sectionId === 'inventory-section') {
+        renderInventory();
+    }
+    if (sectionId === 'leaderboard-section') {
+        renderLeaderboard('cl'); // По умолчанию сортировка по CL
+    }
+}
+
+// Инициализация при загрузке страницы
+(function init() {
+    const accounts = getAccounts();
+    const lastUser = localStorage.getItem('lastLoggedInUser');
+    
+    if (lastUser && accounts[lastUser]) {
+        // Если последний пользователь найден, заполняем поле для быстрого входа
+        document.getElementById('username-input').value = lastUser;
+        document.getElementById('auth-error').textContent = 'Введите пароль для быстрого входа.';
+    } 
+    
+    document.getElementById('auth-screen').classList.add('active');
+
+})();
+</script>
+
+</body>
+</html>
